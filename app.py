@@ -1,7 +1,8 @@
 from flask import Flask, render_template, jsonify, request
 from src.helper import download_hugging_face_embeddings
 from langchain_pinecone import PineconeVectorStore
-from langchain_community.chat_models import ChatOllama
+# from langchain_community.chat_models import ChatOllama
+from langchain_openai import ChatOpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -17,9 +18,11 @@ load_dotenv()
 
 PINECONE_API_KEY=os.environ.get('PINECONE_API_KEY')
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY')
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+os.environ["GROQ_API_KEY"] = GROQ_API_KEY 
 
 embeddings = download_hugging_face_embeddings()
 
@@ -33,8 +36,15 @@ docsearch = PineconeVectorStore.from_existing_index(
 
 retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":2})
 
-chatModel = ChatOllama(
-    model="mistral",
+# chatModel = ChatOllama(
+#     model="mistral",
+#     temperature=0
+# )
+
+chatModel = ChatOpenAI(
+    model="llama-3.3-70b-versatile",   # groq model name
+    base_url="https://api.groq.com/openai/v1",
+    api_key=GROQ_API_KEY,
     temperature=0
 )
 prompt = ChatPromptTemplate.from_messages(
